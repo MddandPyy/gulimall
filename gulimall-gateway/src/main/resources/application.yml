@@ -6,10 +6,20 @@ spring:
           uri: http://localhost:7000
           predicates:
             - Query=url,baidu
+
         - id: test_qq
           uri: https://www.qq.com
           predicates:
             - Query=url,qq
+
+        #精确的路由放前面，模糊的路由放后面，是的能准确路由分发请求
+        - id: product_route
+          uri: lb://gulimall-product # 注册中心的服务
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - RewritePath=/api/(?<segment>/?.*),/$\{segment}
+
         - id: admin_route
           uri: lb://renren-fast # 路由给renren-fast
           predicates:  # 什么情况下路由给它

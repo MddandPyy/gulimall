@@ -8,6 +8,8 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+
+
   application:
     name: gulimall-product
 
@@ -16,6 +18,12 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
-
+      logic-delete-value: 1 #项目全局配置1-删除，2-不删除，如果某个表的逻辑与此相反，可以在实体中使用@TableLogic(value = "1",delval = "0") 1-显示，2-不显示，单独设置
+      logic-not-delete-value: 0
 server:
   port: 10000
+logging:
+  level:
+    com.atguigu.gulimall: debug
+
+
