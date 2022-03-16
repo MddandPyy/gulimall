@@ -1,9 +1,15 @@
 package com.atguigu.gulimall.product.controller;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
+import com.atguigu.common.valid.AddGroup;
+import com.atguigu.common.valid.UpdateGroup;
+import com.atguigu.common.valid.UpdateStatusGroup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +21,7 @@ import com.atguigu.gulimall.product.service.BrandService;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.R;
 
+import javax.validation.Valid;
 
 
 /**
@@ -26,6 +33,7 @@ import com.atguigu.common.utils.R;
  */
 @RestController
 @RequestMapping("product/brand")
+
 public class BrandController {
     @Autowired
     private BrandService brandService;
@@ -53,14 +61,36 @@ public class BrandController {
         return R.ok().put("brand", brand);
     }
 
+//    /**
+//     * 保存
+//     */
+//    @RequestMapping("/save")
+//    //@RequiresPermissions("product:brand:save")
+//    //此处添加@Valid，告诉springmvc在BrandEntity中有需要校验的字段，具体校验通过注解，添加在实体的字段上
+//    public R save(@Valid @RequestBody BrandEntity brand, BindingResult result){
+//		if(result.hasErrors()){
+//		    Map<String,Object> map = new HashMap<>();
+//		    result.getFieldErrors().forEach((item)->{
+//		        String message = item.getDefaultMessage();
+//                String field = item.getField();
+//                map.put(field,message);
+//            });
+//		   return R.error(400,"提交数据不合法").put("data",map);
+//        }else{
+//            brandService.save(brand);
+//        }
+//
+//        return R.ok();
+//    }
+
     /**
      * 保存
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:brand:save")
-    public R save(@RequestBody BrandEntity brand){
-		brandService.save(brand);
-
+    //此处添加@Valid，告诉springmvc在BrandEntity中有需要校验的字段，具体校验通过注解，添加在实体的字段上
+    public R save(@Validated(AddGroup.class) @RequestBody BrandEntity brand){
+        brandService.save(brand);
         return R.ok();
     }
 
@@ -69,12 +99,22 @@ public class BrandController {
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:brand:update")
-    public R update(@RequestBody BrandEntity brand){
+    public R update(@Validated(UpdateGroup.class) @RequestBody BrandEntity brand){
 		brandService.updateById(brand);
 
         return R.ok();
     }
 
+    /**
+     * 修改
+     */
+    @RequestMapping("/update/status")
+    //@RequiresPermissions("product:brand:update")
+    public R updateStatus(@Validated(UpdateStatusGroup.class) @RequestBody BrandEntity brand){
+        brandService.updateById(brand);
+
+        return R.ok();
+    }
     /**
      * 删除
      */

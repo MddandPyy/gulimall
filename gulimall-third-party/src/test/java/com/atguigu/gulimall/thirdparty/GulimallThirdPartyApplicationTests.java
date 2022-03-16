@@ -14,7 +14,7 @@ import java.io.InputStream;
 class GulimallThirdPartyApplicationTests {
 
     @Autowired
-    OSSClient ossClient;
+    OSS ossClient;
 
     @Value("${spring.cloud.alicloud.access-key}")
     String accessKeyId;

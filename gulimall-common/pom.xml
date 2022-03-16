@@ -19,6 +19,22 @@
     </properties>
 
     <dependencies>
+        <!--添加依赖-->
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <version>2.0.1.Final</version>
+        </dependency>
+
+
+        <!--jsr303-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <version>2.2.1.RELEASE</version>
+        </dependency>
+
+        <!-- mybatisPLUS -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
