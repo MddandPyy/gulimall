@@ -4,12 +4,17 @@ import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.product.dao.CategoryDao;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
+import com.atguigu.gulimall.product.service.CategoryBrandRelationService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,6 +22,9 @@ import java.util.stream.Collectors;
 
 @Service("categoryService")
 public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity> implements CategoryService {
+
+    @Autowired
+    CategoryBrandRelationService categoryBrandRelationService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -66,6 +74,59 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
         return level1;
     }
+
+    @Override
+    public Long[] findCatelogPath(Long catelogId) {
+        //递归有先放数据，和后方数据的问题
+        //List<Long> paths = new ArrayList<>();
+        //List<Long> longs = fineParentPath(catelogId, paths);
+        //Collections.reverse(longs);
+
+
+
+        List<Long> longs = new ArrayList<>();
+        //fineParentPath2(catelogId, longs);
+        //Collections.reverse(longs);
+        fineParentPath(catelogId, longs);
+        return longs.toArray(new Long[longs.size()]);
+    }
+
+    @Transactional
+    @Override
+    public void updateCascade(CategoryEntity category) {
+        this.updateById(category);
+        categoryBrandRelationService.updateCategory(category.getCatId(),category.getName());
+
+    }
+
+    private void fineParentPath(long catelogId,List<Long> paths){
+        CategoryEntity entity = this.getById(catelogId);
+        if(entity.getParentCid()!=0){
+            fineParentPath(entity.getParentCid(),paths);
+            paths.add(entity.getCatId());
+        }else{
+            paths.add(entity.getCatId());
+        }
+
+    }
+
+//    private List<Long> fineParentPath(long catelogId,List<Long> paths){
+//        paths.add(catelogId);
+//        CategoryEntity entity = this.getById(catelogId);
+//        if(entity.getParentCid()!=0){
+//            fineParentPath(entity.getParentCid(),paths);
+//        }
+//        return paths;
+//
+//    }
+
+//    private void fineParentPath2(long catelogId,List<Long> paths){
+//        paths.add(catelogId);
+//        CategoryEntity entity = this.getById(catelogId);
+//        if(entity.getParentCid()!=0){
+//            fineParentPath2(entity.getParentCid(),paths);
+//        }
+//    }
 
     //使用递归查找所有菜单子菜单
     private  List<CategoryEntity> getChildren(CategoryEntity root,List<CategoryEntity> all){
