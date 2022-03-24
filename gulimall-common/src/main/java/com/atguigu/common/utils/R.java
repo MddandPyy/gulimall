@@ -8,6 +8,8 @@
 
 package com.atguigu.common.utils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import org.apache.http.HttpStatus;
 
 import java.util.HashMap;
@@ -15,12 +17,37 @@ import java.util.Map;
 
 /**
  * 返回数据
- *
+ *	解决数据传递方法
+ *	1、可以在R刚设计的时候提供泛型。但是目前R已经被多地方应用，修改 变动太大
+ *  2、或者不用R传递，直接自定义返回值
+ *  3、添加setData和getData方法，自己封装解析结果
  * @author Mark sunlightcs@gmail.com
  */
 public class R extends HashMap<String, Object> {
 	private static final long serialVersionUID = 1L;
-	
+
+	public R setData(Object data) {
+		put("data",data);
+		return this;
+	}
+
+	//利用fastjson进行反序列化
+	public <T> T getData(TypeReference<T> typeReference) {
+		Object data = get("data");	//默认是map
+		String jsonString = JSON.toJSONString(data);
+		T t = JSON.parseObject(jsonString, typeReference);
+		return t;
+	}
+
+	//利用fastjson进行反序列化
+	public <T> T getData(String key,TypeReference<T> typeReference) {
+		Object data = get(key);	//默认是map
+		String jsonString = JSON.toJSONString(data);
+		T t = JSON.parseObject(jsonString, typeReference);
+		return t;
+	}
+
+
 	public R() {
 		put("code", 0);
 		put("msg", "success");
