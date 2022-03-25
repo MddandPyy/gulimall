@@ -1,4 +1,4 @@
-package com.atguigu.gulimall.product.controller;
+package com.atguigu.gulimall.product.app;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -10,33 +10,33 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.atguigu.gulimall.product.entity.UndoLogEntity;
-import com.atguigu.gulimall.product.service.UndoLogService;
+import com.atguigu.gulimall.product.entity.ProductAttrValueEntity;
+import com.atguigu.gulimall.product.service.ProductAttrValueService;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.R;
 
 
 
 /**
- * 
+ * spu属性值
  *
  * @author lzp
  * @email lzp@gmail.com
  * @date 2022-03-09 09:38:07
  */
 @RestController
-@RequestMapping("product/undolog")
-public class UndoLogController {
+@RequestMapping("product/productattrvalue")
+public class ProductAttrValueController {
     @Autowired
-    private UndoLogService undoLogService;
+    private ProductAttrValueService productAttrValueService;
 
     /**
      * 列表
      */
     @RequestMapping("/list")
-    //@RequiresPermissions("product:undolog:list")
+    //@RequiresPermissions("product:productattrvalue:list")
     public R list(@RequestParam Map<String, Object> params){
-        PageUtils page = undoLogService.queryPage(params);
+        PageUtils page = productAttrValueService.queryPage(params);
 
         return R.ok().put("page", page);
     }
@@ -46,20 +46,20 @@ public class UndoLogController {
      * 信息
      */
     @RequestMapping("/info/{id}")
-    //@RequiresPermissions("product:undolog:info")
+    //@RequiresPermissions("product:productattrvalue:info")
     public R info(@PathVariable("id") Long id){
-		UndoLogEntity undoLog = undoLogService.getById(id);
+		ProductAttrValueEntity productAttrValue = productAttrValueService.getById(id);
 
-        return R.ok().put("undoLog", undoLog);
+        return R.ok().put("productAttrValue", productAttrValue);
     }
 
     /**
      * 保存
      */
     @RequestMapping("/save")
-    //@RequiresPermissions("product:undolog:save")
-    public R save(@RequestBody UndoLogEntity undoLog){
-		undoLogService.save(undoLog);
+    //@RequiresPermissions("product:productattrvalue:save")
+    public R save(@RequestBody ProductAttrValueEntity productAttrValue){
+		productAttrValueService.save(productAttrValue);
 
         return R.ok();
     }
@@ -68,9 +68,9 @@ public class UndoLogController {
      * 修改
      */
     @RequestMapping("/update")
-    //@RequiresPermissions("product:undolog:update")
-    public R update(@RequestBody UndoLogEntity undoLog){
-		undoLogService.updateById(undoLog);
+    //@RequiresPermissions("product:productattrvalue:update")
+    public R update(@RequestBody ProductAttrValueEntity productAttrValue){
+		productAttrValueService.updateById(productAttrValue);
 
         return R.ok();
     }
@@ -79,9 +79,9 @@ public class UndoLogController {
      * 删除
      */
     @RequestMapping("/delete")
-    //@RequiresPermissions("product:undolog:delete")
+    //@RequiresPermissions("product:productattrvalue:delete")
     public R delete(@RequestBody Long[] ids){
-		undoLogService.removeByIds(Arrays.asList(ids));
+		productAttrValueService.removeByIds(Arrays.asList(ids));
 
         return R.ok();
     }
