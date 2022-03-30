@@ -3,6 +3,7 @@ package com.atguigu.gulimall.product;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
@@ -61,6 +62,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  *  springboot访问项目的时候，默认会访问index
  * 4）、页面修改实时更新，不重启服务器
  */
+@EnableCaching
 @MapperScan("com.atguigu.gulimall.product.dao")
 @SpringBootApplication
 @EnableDiscoveryClient

@@ -16,6 +16,8 @@ import org.apache.commons.lang.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -105,6 +107,26 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return longs.toArray(new Long[longs.size()]);
     }
 
+    /**
+     * 级联更新所有数据			[分区名默认是就是缓存的前缀] SpringCache: 不加锁
+     *
+     * @CacheEvict: 缓存失效模式		--- 页面一修改 然后就清除这两个缓存
+     * key = "'getLevel1Categorys'" : 记得加单引号 [子解析字符串]
+     *
+     * @Caching: 同时进行多种缓存操作
+     *
+     * @CacheEvict(value = {"category"}, allEntries = true) : 删除这个分区所有数据
+     *
+     * @CachePut: 这次查询操作写入缓存
+     */
+//	@Caching(evict = {
+//			@CacheEvict(value = {"category"}, key = "'getLevel1Categorys'"),
+//			@CacheEvict(value = {"category"}, key = "'getCatelogJson'")
+//	})
+    //此处注意，如果spring.cache.redis.use-key-prefix=false 不使用前缀，则生成的key没有分区。这个注解会将redis中所有key都删除，谨慎使用
+    //如果spring.cache.redis.use-key-prefix=true 使用前缀，则只会删除redis中指定分区的key
+    @CacheEvict(value = {"category"}, allEntries = true)
+//	@CachePut
     @Transactional
     @Override
     public void updateCascade(CategoryEntity category) {
@@ -113,6 +135,50 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
     }
 
+    /**
+     * 每一个需要缓存的数据我们都来指定要放到那个名字的缓存。【缓存的分区(按照业务类型分)】
+     * 代表当前方法的结果需要缓存，如果缓存中有，方法都不用调用，如果缓存中没有，会调用方法。最后将方法的结果放入缓存
+     * 默认行为
+     *      如果缓存中有，方法不再调用
+     *      key是默认生成的:缓存的名字::SimpleKey::[](自动生成key值)         category::SimpleKey []
+     *      缓存的value值，默认使用jdk序列化机制，将序列化的数据存到redis中
+     *      默认时间是 -1：
+     *
+     *   自定义操作：key的生成
+     *      指定生成缓存的key：key属性指定，接收一个Spel
+     *      指定缓存的数据的存活时间:配置文档中修改存活时间  spring.cache.redis.time-to-live=3600000
+     *      将数据保存为json格式
+     *
+     *
+     * 4、Spring-Cache的不足之处：
+     *  1）、读模式
+     *      缓存穿透：查询一个null数据。解决方案：缓存空数据
+     *      缓存击穿：大量并发进来同时查询一个正好过期的数据。解决方案：加锁 ? 默认是无加锁的;使用sync = true来解决击穿问题
+     *      缓存雪崩：大量的key同时过期。解决：加随机时间。加上过期时间
+     *  2)、写模式：（缓存与数据库一致）
+     *      1）、读写加锁。
+     *      2）、引入Canal,感知到MySQL的更新去更新Redis
+     *      3）、读多写多，直接去数据库查询就行
+     *
+     *  总结：
+     *      常规数据（读多写少，即时性，一致性要求不高的数据，完全可以使用Spring-Cache）：写模式(只要缓存的数据有过期时间就足够了)
+     *      特殊数据：特殊设计
+     *
+     *  原理：
+     *      CacheManager(RedisCacheManager)->Cache(RedisCache)->Cache负责缓存的读写
+     *
+     *   @Cacheable(value = {"category"},key = "'level1Categorys'")   redis中的key为category::level1Categorys
+     *   @Cacheable(value = {"category"},key = "#root.method.name")   redis中的key为category::getLevel1Categorys  后面的是方法名
+     *
+     *   #如果指定了前缀就用我们指定的前缀，如果没有就默认使用缓存的名字category作为前缀，
+     *   #spring.cache.redis.key-prefix=CACHE_
+     *
+     *   false不使用前缀，指定的默认的都没有。
+     *   spring.cache.redis.use-key-prefix=true
+     *
+     * @return
+     */
+    @Cacheable(value = {"category"},key = "#root.method.name")
     @Override
     public List<CategoryEntity> getLevel1Categorys() {
         System.out.println("getLevel1Categorys........");
@@ -123,8 +189,55 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return categoryEntities;
     }
 
+    @Cacheable(value = "category", key = "#root.method.name" , sync = true)
     @Override
     public Map<String, List<Catelog2Vo>> getCatalogJson() {
+        System.out.println("查询了数据库");
+
+        //将数据库的多次查询变为一次
+        List<CategoryEntity> selectList = this.baseMapper.selectList(null);
+
+        //1、查出所有分类
+        //1、1）查出所有一级分类
+        List<CategoryEntity> level1Categorys = getParent_cid(selectList, 0L);
+
+        //封装数据
+        Map<String, List<Catelog2Vo>> parentCid = level1Categorys.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
+            //1、每一个的一级分类,查到这个一级分类的二级分类
+            List<CategoryEntity> categoryEntities = getParent_cid(selectList, v.getCatId());
+
+            //2、封装上面的结果
+            List<Catelog2Vo> catelog2Vos = null;
+            if (categoryEntities != null) {
+                catelog2Vos = categoryEntities.stream().map(l2 -> {
+                    Catelog2Vo catelog2Vo = new Catelog2Vo(v.getCatId().toString(), null, l2.getCatId().toString(), l2.getName().toString());
+
+                    //1、找当前二级分类的三级分类封装成vo
+                    List<CategoryEntity> level3Catelog = getParent_cid(selectList, l2.getCatId());
+
+                    if (level3Catelog != null) {
+                        List<Catelog2Vo.Category3Vo> category3Vos = level3Catelog.stream().map(l3 -> {
+                            //2、封装成指定格式
+                            Catelog2Vo.Category3Vo category3Vo = new Catelog2Vo.Category3Vo(l2.getCatId().toString(), l3.getCatId().toString(), l3.getName());
+
+                            return category3Vo;
+                        }).collect(Collectors.toList());
+                        catelog2Vo.setCatalog3List(category3Vos);
+                    }
+
+                    return catelog2Vo;
+                }).collect(Collectors.toList());
+            }
+
+            return catelog2Vos;
+        }));
+
+        return parentCid;
+    }
+
+
+
+    public Map<String, List<Catelog2Vo>> getCatalogJson2() {
 
         //1、加入缓存的数据都是存成json字符串
         //json跨语言，跨平台兼容
