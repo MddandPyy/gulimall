@@ -6,6 +6,9 @@ spring:
 
   application:
     name: gulimall-search
+  thymeleaf:
+    cache: false
 server:
   port: 12000
+
 

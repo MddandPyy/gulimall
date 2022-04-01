@@ -49,6 +49,11 @@ spring:
             - RewritePath=/api/(?<segment>.*),/renren-fast/$\{segment}  # 把/api/* 改变成 /renren-fast/*
 
         - id: gulimall_host_route
-          uri: lb://gulimall-product # 路由给renren-fast
+          uri: lb://gulimall-product
           predicates:  # 什么情况下路由给它
-            - Host=**.gulimall.com,gulimall.com
+            - Host=gulimall.com
+
+        - id: gulimall_search_route
+          uri: lb://gulimall-search
+          predicates:  # 什么情况下路由给它
+            - Host=search.gulimall.com
