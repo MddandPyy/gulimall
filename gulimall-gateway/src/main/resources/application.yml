@@ -51,9 +51,11 @@ spring:
         - id: gulimall_host_route
           uri: lb://gulimall-product
           predicates:  # 什么情况下路由给它
-            - Host=gulimall.com
+            - Host=gulimall.com,item.gulimall.com
 
         - id: gulimall_search_route
           uri: lb://gulimall-search
           predicates:  # 什么情况下路由给它
             - Host=search.gulimall.com
+
+
