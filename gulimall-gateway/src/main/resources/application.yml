@@ -58,4 +58,9 @@ spring:
           predicates:  # 什么情况下路由给它
             - Host=search.gulimall.com
 
+        - id: gulimall_auth_route
+          uri: lb://gulimall-auth-server
+          predicates:  # 什么情况下路由给它
+            - Host=auth.gulimall.com
+
 
