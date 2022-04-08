@@ -40,6 +40,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- 整合Spring-seesion  -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-data-redis</artifactId>
+        </dependency>
+
         <!-- 引入redis -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

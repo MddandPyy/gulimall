@@ -94,6 +94,7 @@ public class Oath2Controller {
 				log.info("\n欢迎 [" + respVo.getUsername() + "] 使用社交账号登录");
 				// 第一次使用session 命令浏览器保存这个用户信息 JESSIONSEID 每次只要访问这个网站就会带上这个cookie
 				// 在发卡的时候扩大session作用域 （不指定话，默认当前域名）(指定域名为父域名)
+				//都在AuthSessionConfig中配置了
 				// TODO 1.默认发的当前域的session (需要解决子域session共享问题)
 				/*
 				session.setAttribute("logUser",respVo);
@@ -103,7 +104,7 @@ public class Oath2Controller {
 				servletResponse.addCookie(cookie);
 				*/
 
-				// TODO 2.使用JSON序列化后保存到redis  自动完成
+				// TODO 2.使用JSON序列化后保存到redis  自动完成 MemberRespVo实现Serializable接口
 				session.setAttribute(AuthServerConstant.LOGIN_USER, respVo);
 				// 登录成功 跳回首页
 				return "redirect:http://gulimall.com";

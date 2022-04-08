@@ -47,13 +47,13 @@ public class LoginController {
     @GetMapping({"/login.html","/","/index","/index.html"}) // auth
     public String loginPage(HttpSession session){
         // 从会话从获取loginUser
-//        Object attribute = session.getAttribute(AuthServerConstant.LOGIN_USER);// "loginUser";
-//        System.out.println("attribute:"+attribute);
-//        if(attribute == null){
+        Object attribute = session.getAttribute(AuthServerConstant.LOGIN_USER);// "loginUser";
+        System.out.println("attribute:"+attribute);
+        if(attribute == null){
             return "login";
-//        }
-//        System.out.println("已登陆过，重定向到首页");
-//        return "redirect:http://gulimall.com";
+        }
+        System.out.println("已登陆过，重定向到首页");
+        return "redirect:http://gulimall.com";
     }
 
 
