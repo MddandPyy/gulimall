@@ -67,3 +67,8 @@ spring:
           uri: lb://gulimall-cart
           predicates:  # 什么情况下路由给它
             - Host=cart.gulimall.com
+
+        - id: gulimall_order_route
+          uri: lb://gulimall-order
+          predicates:  # 什么情况下路由给它
+            - Host=order.gulimall.com

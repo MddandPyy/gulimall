@@ -5,6 +5,15 @@ spring:
     password: test
     url: jdbc:mysql://localhost:3306/gulimall_oms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+  redis:
+    host: 192.168.56.10
+    port: 6379
+  session:
+    store-type: redis
   rabbitmq:
     host: ${ipAddr}
     port: 5672
