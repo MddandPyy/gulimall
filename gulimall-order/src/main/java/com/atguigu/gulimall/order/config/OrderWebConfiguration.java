@@ -19,6 +19,7 @@ public class OrderWebConfiguration implements WebMvcConfigurer {
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		// 放行支付宝回调请求
-		registry.addInterceptor(loginUserInterceptor).addPathPatterns("/**").excludePathPatterns("/payed/notify");
+		registry.addInterceptor(loginUserInterceptor).addPathPatterns("/**").excludePathPatterns("/payed/notify")
+				.excludePathPatterns("/test/createOrder");
 	}
 }

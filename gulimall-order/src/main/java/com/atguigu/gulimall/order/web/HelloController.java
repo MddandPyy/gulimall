@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.order.web;
 
+import com.atguigu.common.constant.RabbitInfo;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,7 @@ public class HelloController {
 		OrderEntity orderEntity = new OrderEntity();
 		orderEntity.setOrderSn(UUID.randomUUID().toString().replace("-",""));
 		orderEntity.setModifyTime(new Date());
-		rabbitTemplate.convertAndSend("order-event-exchange", "order.create.order", orderEntity);
+		rabbitTemplate.convertAndSend(RabbitInfo.Order.exchange, RabbitInfo.Order.delayRoutingKey, orderEntity);
 		return "下单成功";
 	}
 }

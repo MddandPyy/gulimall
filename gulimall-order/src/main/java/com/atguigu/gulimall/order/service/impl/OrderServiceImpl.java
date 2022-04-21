@@ -5,6 +5,7 @@ import com.atguigu.common.constant.RabbitInfo;
 import com.atguigu.common.enume.OrderStatusEnum;
 import com.atguigu.common.enume.SubmitOrderStatusEnum;
 import com.atguigu.common.exception.NotStockException;
+import com.atguigu.common.to.mq.OrderTo;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.order.constant.OrderConstant;
@@ -19,7 +20,11 @@ import com.atguigu.gulimall.order.service.PaymentInfoService;
 import com.atguigu.gulimall.order.to.OrderCreateTo;
 import com.atguigu.gulimall.order.vo.*;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import io.seata.spring.annotation.GlobalTransactional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -48,6 +53,7 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 
+@Slf4j
 @Service("orderService")
 public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> implements OrderService {
 
@@ -156,7 +162,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         return confirmVo;
     }
 
-    //	@GlobalTransactional // seata全局事务TM
+    //@GlobalTransactional // seata全局事务TM,适合管理系统的分布式事务控制，并发量不高。下单接口属于电商项目并发量很高的接口，一般使用MQ
     @Transactional
     @Override // OrderServiceImpl
     public SubmitOrderResponseVo submitOrder(OrderSubmitVo vo) {
@@ -208,19 +214,23 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 // 远程锁库存
                 R r = wmsFeignService.orderLockStock(lockVo);
                 if (r.getCode() == 0) {
+                    //保存订单，生成id，并发送到mq
+                    saveOrder(order);
                     // 库存足够 锁定成功 给MQ发送订单消息，到时为支付则取消
                     submitVo.setOrderEntity(order.getOrder());
                     // 这个地方值得想一下锁库存和发MQ直接的事务性
                     rabbitTemplate.convertAndSend(RabbitInfo.Order.exchange,
-                            RabbitInfo.Order.delayQueue,
+                            RabbitInfo.Order.delayRoutingKey,
                             order.getOrder());
-                    saveOrder(order);
+
 //					int i = 10/0;
                 } else {
                     // 锁定失败
                     String msg = (String) r.get("msg");
                     throw new NotStockException(msg);
                 }
+
+              //  throw new NotStockException("测试分布式事务");
             } else {
 
                 // 价格验证失败
@@ -229,6 +239,47 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             }
         }
         return submitVo;
+    }
+
+    @Override
+    public OrderEntity getOrderByOrderSn(String orderSn) {
+        return this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
+    }
+
+    /**
+     * 此方法可以手动触发，也可以通过订单超时监听消息触发。
+     * @param entity
+     */
+    @Override
+    public void closeOrder(OrderEntity entity) {
+        log.info("\n收到过期的订单信息--准关闭订单:" + entity.getOrderSn());
+        // 因为消息发送过来的订单已经是很久前的了，中间可能被改动，因此要查询最新的订单
+        //OrderEntity orderEntity = this.getById(entity.getId());
+
+        OrderEntity orderEntity =this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", entity.getOrderSn()));
+
+        if(orderEntity!=null){
+            //如果订单还处于新创建的状态，说明超时未支付，进行关单
+            if (orderEntity.getStatus() == OrderStatusEnum.CREATE_NEW.getCode()) {
+                OrderEntity update = new OrderEntity();
+                update.setId(entity.getId());
+                update.setStatus(OrderStatusEnum.CANCLED.getCode());
+                this.updateById(update);
+
+            // 发送给MQ告诉它有一个订单被自动关闭了
+            OrderTo orderTo = new OrderTo();
+            BeanUtils.copyProperties(orderEntity, orderTo);
+            try {
+                // 保证消息 100% 发出去 每一个消息在数据库保存详细信息
+                // 定期扫描数据库 将失败的消息在发送一遍
+                rabbitTemplate.convertAndSend(RabbitInfo.Order.exchange,
+                        RabbitInfo.Order.orderreleasestock, orderTo);
+            } catch (AmqpException e) {
+                // 将没发送成功的消息进行重试发送.
+            }
+            }
+        }
+
     }
 
     /**

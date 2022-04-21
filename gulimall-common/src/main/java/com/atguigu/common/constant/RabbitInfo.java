@@ -15,7 +15,8 @@ public class RabbitInfo {
         public static final String releaseRoutingKey="order.release";
         // 其他路由key也是跳到releaseQueue
         public static final String baseRoutingKey="order.#";
-        public static final int ttl = 900000;
+        public static final String orderreleasestock="order.release.stock";
+        public static final int ttl = 60000;
     }
     public static class Stock{
         public static final String exchange="stock-event-exchange";
@@ -24,7 +25,7 @@ public class RabbitInfo {
         public static final String releaseQueue="stock.release.queue";
         public static final String releaseRoutingKey="stock.release.queue";
         public static final String baseRoutingKey="stock.#";
-        public static final int ttl = 900000;
+        public static final int ttl = 120000;
     }
     public static class SecKill{
         public static final String exchange="seckill-event-exchange";

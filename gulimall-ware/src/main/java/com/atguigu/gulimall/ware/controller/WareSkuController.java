@@ -4,11 +4,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.atguigu.common.constant.RabbitInfo;
 import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.common.exception.NotStockException;
 import com.atguigu.gulimall.ware.vo.SkuHasStockVo;
 import com.atguigu.gulimall.ware.vo.WareSkuLockVo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +34,17 @@ import com.atguigu.common.utils.R;
 public class WareSkuController {
     @Autowired
     private WareSkuService wareSkuService;
+
+    /**
+     * 只有监听queue，才会将spring容器中的rabbitmq相关的bean创建到rabbitmq服务器中
+     * @param vo
+     * @return
+     */
+//    @RabbitListener(queues = RabbitInfo.Stock.delayQueue)
+//    public void initRabbitmqInfo(){
+//
+//    }
+
 
     @PostMapping("/lock/order")
     public R orderLockStock(@RequestBody WareSkuLockVo vo){ // SkuId  count
