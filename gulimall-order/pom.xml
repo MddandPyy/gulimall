@@ -55,6 +55,13 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
+        <!--支付-->
+        <dependency>
+            <groupId>com.alipay.sdk</groupId>
+            <artifactId>alipay-sdk-java</artifactId>
+            <version>4.11.54.ALL</version>
+        </dependency>
+
         <!-- 整合Spring-session  -->
         <dependency>
             <groupId>org.springframework.session</groupId>
