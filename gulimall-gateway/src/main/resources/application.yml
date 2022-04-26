@@ -20,6 +20,13 @@ spring:
           filters:
             - RewritePath=/api/(?<segment>/?.*),/$\{segment}
 
+        - id: coupon_route
+          uri: lb://gulimall-coupon # 注册中心的服务
+          predicates:
+            - Path=/api/coupon/**,/hello
+          filters:
+            - RewritePath=/api/(?<segment>/?.*),/$\{segment}
+
         - id: third_party_route
           uri: lb://gulimall-third-party # 注册中心的服务
           predicates:
@@ -76,3 +83,10 @@ spring:
           uri: lb://gulimall-member
           predicates:  # 什么情况下路由给它
             - Host=member.gulimall.com
+
+        - id: gulimall_seckill_route
+          uri: lb://gulimall-seckill
+          predicates:  # 什么情况下路由给它
+            - Host=seckill.gulimall.com
+
+

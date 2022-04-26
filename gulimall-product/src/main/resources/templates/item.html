@@ -521,6 +521,10 @@
 									<span>￥</span>
 									<span th:text="${#numbers.formatDecimal(item.info.price,3,2)}">4499.00</span>
 								</li>
+								<li style="color: red" th:if="${item.seckillSkuVo!=null}">
+									<span th:if="${#dates.createNow().getTime() < item.seckillSkuVo.startTime}">商品将会在 [[${#dates.format(new java.util.Date(item.seckillSkuVo.startTime),"yyyy-MM-dd HH:mm:ss")}]] 进行秒杀</span>
+									<span th:if="${#dates.createNow().getTime() >= item.seckillSkuVo.startTime && #dates.createNow().getTime() <= item.seckillSkuVo.endTime}">秒杀价： [[${#numbers.formatDecimal(item.seckillSkuVo.seckillPrice,1,2)}]]</span>
+								</li>
 								<li>
 									预约享资格
 								</li>
@@ -648,7 +652,16 @@
 
 								</div>
 							</div>
-							<div class="box-btns-two">
+							<!-- 抢购和加入购物车 2选1 -->
+							<div class="box-btns-two"
+								 th:if="${item.seckillSkuVo != null && (#dates.createNow().getTime() >= item.seckillSkuVo.startTime && #dates.createNow().getTime() <= item.seckillSkuVo.endTime)}">
+								<a id="secKillA"
+								   th:attr="sessionId=${item.seckillSkuVo.promotionSessionId},skuId=${item.info.skuId}, code=${item.seckillSkuVo.randomCode}">
+									立即抢购
+								</a>
+							</div>
+							<div class="box-btns-two"
+								 th:if="${item.seckillSkuVo == null || (#dates.createNow().getTime() < item.seckillSkuVo.startTime || #dates.createNow().getTime() > item.seckillSkuVo.endTime)}">
 								<a id="addToCartA" th:attr="skuId=${item.info.skuId}">
 									加入购物车
 								</a>
@@ -1491,6 +1504,18 @@
 			// 获取当前按钮的自定义属性
 			let skuId = $(this).attr("skuId");
 			location.href = "http://cart.gulimall.com/addToCart?skuId=" + skuId + "&num=" + num;
+			return false;
+		})
+
+		$("#secKillA").click(function () {
+			var isLogin = [[${session.loginUser != null}]]
+			if (isLogin) {
+				var killId = $(this).attr("sessionid") + "-" + $(this).attr("skuid");
+				var num = $("#numInput").val();
+				location.href = "http://seckill.gulimall.com/kill?killId=" + killId + "&key=" + $(this).attr("code") + "&num=" + num;
+			} else {
+				layer.msg("请先登录!")
+			}
 			return false;
 		})
 

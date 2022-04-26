@@ -89,17 +89,25 @@ public class OrderMQConfig {
 				RabbitInfo.Order.exchange,
 				RabbitInfo.Order.orderreleasestock, null);
 	}
-//
-//	@Bean
-//	public Queue orderSecKillQueue(){
-//		return new Queue(RabbitInfo.SecKill.delayQueue,
-//				true, false, false);
-//	}
-//	@Bean
-//	public Binding orderSecKillQueueBinding(){
-//		return new Binding(RabbitInfo.SecKill.delayQueue, Binding.DestinationType.QUEUE,
-//				RabbitInfo.Order.exchange, RabbitInfo.SecKill.delayRoutingKey, null);
-//	}
+
+	/**
+	 * 秒杀订单queue，流量削峰
+	 */
+	@Bean
+	public Queue orderSecKillQueue(){
+		return new Queue(RabbitInfo.SecKill.delayQueue,
+				true, false, false);
+	}
+
+
+	/**
+	 * 秒杀订单与交换机进行绑定
+	 */
+	@Bean
+	public Binding orderSecKillQueueBinding(){
+		return new Binding(RabbitInfo.SecKill.delayQueue, Binding.DestinationType.QUEUE,
+				RabbitInfo.Order.exchange, RabbitInfo.SecKill.delayRoutingKey, null);
+	}
 
 	/**
 	 * 测试死信队列
