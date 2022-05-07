@@ -27,6 +27,12 @@
 <!--        </dependency>-->
 
 
+        <dependency><!--流量监控-->
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+            <version>2.2.1.RELEASE</version>
+        </dependency>
+
         <!-- 模板引擎 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

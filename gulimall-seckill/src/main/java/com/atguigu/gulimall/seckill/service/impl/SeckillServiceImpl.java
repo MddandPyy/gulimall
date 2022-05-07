@@ -1,5 +1,9 @@
 package com.atguigu.gulimall.seckill.service.impl;
 
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.RabbitInfo;
@@ -114,8 +118,17 @@ public class SeckillServiceImpl implements SeckillService {
 		return null;
 	}
 
+	@SentinelResource(value= "getSkuSeckillInfoResource",blockHandler = "testBlockHandler")
 	@Override
 	public SeckillSkuRedisTo getSkuSeckillInfo(Long skuId) {
+
+		// 定义一段受保护的资源
+		try (Entry entry = SphU.entry("seckillSkus")){
+
+		}catch (BlockException e){
+			log.warn("资源被限流：" + e.getMessage());
+		}
+
 		BoundHashOperations<String, String, String> hashOps = stringRedisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
 		Set<String> keys = hashOps.keys();
 		if(keys != null && keys.size() > 0){
@@ -134,6 +147,11 @@ public class SeckillServiceImpl implements SeckillService {
 				}
 			}
 		}
+		return null;
+	}
+
+	public  SeckillSkuRedisTo testBlockHandler(Long skuId,BlockException b){
+		log.error("触发资源的限流方法"+b.getMessage());
 		return null;
 	}
 

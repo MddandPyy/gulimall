@@ -26,6 +26,18 @@
             <version>2.0.1.Final</version>
         </dependency>
 
+        <!--sentinel和actuator用于流量监控和统计-->
+        <dependency><!--流量监控-->
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+            <version>${spring-cloud-alibaba.version}</version>
+        </dependency>
+        <dependency><!--流量统计-->
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>${spring-cloud-alibaba.version}</version>
+        </dependency>
+
 
         <!--jsr303-->
         <dependency>
